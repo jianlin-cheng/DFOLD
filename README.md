@@ -65,7 +65,7 @@ Installing DistFOLD
        
    5.2 Test using an example
    
-       $ perl ./confold_dist.pl -rrtype cb -stage2 1 -mcount 5 -seq ./test/input/T0992.fasta -ss ./test/input/T0992.ss  -rr ./test/input/T0992.dist.rr  -o ./test/output/
+       $ perl ./distfold.pl -rrtype cb -stage2 1 -mcount 5 -seq ./test/input/T0992.fasta -ss ./test/input/T0992.ss  -rr ./test/input/T0992.dist.rr  -o ./test/output/
        
        $ ./tools/TMscore ./test/output/stage2/T0992_model1.pdb  ./test/input/T0992.pdb    
            TM-score    = 0.9902
