@@ -78,8 +78,4 @@ Installing DistFOLD
    5.4 (Optional) For a more comprehensive testing see the section below.
 
 
-
-
-To learn about execution time of CONFOLD please visit
-http://protein.rnet.missouri.edu/confold/tool.php
    
