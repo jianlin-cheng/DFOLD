@@ -49,9 +49,13 @@ Installing DistFOLD
    5.1 Execute "perl ./distfold.pl" or "./distfold.pl"
        It should print the usage information.
    5.2 Test using an example
+   
        $ perl ./confold_dist.pl -rrtype cb -stage2 1 -mcount 5 -seq ./test/input/T0992.fasta -ss ./test/input/T0992.ss  -rr ./test/input/T0992.dist.rr  -o ./test/output/
+       
        $ ./tools/TMscore ./test/output/stage2/T0992_model1.pdb  ./test/input/T0992.pdb
+       
            TM-score    = 0.9902
+           
            RMSD = 0.396
        
    5.3 (Optional) Visualize the top model 'T0992_model1.pdb' 
