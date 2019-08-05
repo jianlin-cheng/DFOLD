@@ -127,7 +127,7 @@ print("\n#### (2) Download basic tools\n\n");
 
 chdir($tools_dir);
 
-$basic_tools_list = "SCRATCH-1D_1.1.tar.gz;cns_solve_1.3.tar.gz;dssp-2.0.4-linux-amd64.tar.gz";
+$basic_tools_list = "SCRATCH-1D_1.1.tar.gz;cns_solve_1.3.tar.gz;dssp-2.0.4-linux-amd64.tar.gz;TMalign.tar.gz;pulchra304.tar.gz;scwrl4.tar.gz;TMscore.tar.gz";
 @basic_tools = split(';',$basic_tools_list);
 foreach $tool (@basic_tools)
 {

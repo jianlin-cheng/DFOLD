@@ -21,7 +21,7 @@ export PYTHONPATH
 
 
 
-if [[ ! -f "SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_GFOLD.pdb" ]];then 
+if [[ ! -f "SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_model1.pdb" ]];then 
 	printf "python SOFTWARE_PATH/src/GFOLD.py  --target 1G5T-A  --fasta SOFTWARE_PATH/examples/1G5T-A.fasta --ss SOFTWARE_PATH/examples/1G5T-A.ss  --hbond 1 --restraints SOFTWARE_PATH/examples/1G5T-A.restraints --type CB --distdev 0.1  --epoch 10  --cgstep 100  --dir  SOFTWARE_PATH/test_out/1G5T-A/ --sep 1\n\n"
 	python SOFTWARE_PATH/src/GFOLD.py  --target 1G5T-A  --fasta SOFTWARE_PATH/examples/1G5T-A.fasta --ss SOFTWARE_PATH/examples/1G5T-A.ss  --hbond 1 --restraints SOFTWARE_PATH/examples/1G5T-A.restraints --type CB --distdev 0.1  --epoch 10  --cgstep 100  --dir  SOFTWARE_PATH/test_out/1G5T-A/ --sep 1 
 fi
@@ -30,14 +30,14 @@ printf "\nFinished.."
 printf "\nCheck log file <SOFTWARE_PATH/test_out/1G5T-A.log>\n\n"
 
 
-if [[ ! -f "SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_GFOLD.pdb" ]];then 
+if [[ ! -f "SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_model1.pdb" ]];then 
 	printf "!!!!! Failed to run GFOLD, check the installation <SOFTWARE_PATH/src/>\n\n"
 else
 	printf "\nJob successfully completed!"
-	printf "\nResults: SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_GFOLD.pdb\n\n"
+	printf "\nResults: SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_model1.pdb\n\n"
 fi
 
 printf "Validating the results\n\n";
-printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_GFOLD.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1G5T-A.pdb\n\n"
-SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_GFOLD.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1G5T-A.pdb
+printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1G5T-A.pdb\n\n"
+SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1G5T-A/1G5T-A/1G5T-A_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1G5T-A.pdb
 

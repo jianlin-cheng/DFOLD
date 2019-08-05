@@ -15,7 +15,7 @@ cd SOFTWARE_PATH/test_out/1BYR-A/
 
 
 
-if [[ ! -f "SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_1.pdb" ]];then 
+if [[ ! -f "SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_model1.pdb" ]];then 
 	printf "perl SOFTWARE_PATH/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq SOFTWARE_PATH/examples/1BYR-A.fasta -ss SOFTWARE_PATH/examples/1BYR-A.ss  -rr SOFTWARE_PATH/examples/1BYR-A.dist.rr  -o SOFTWARE_PATH/test_out/1BYR-A/\n\n"
 	perl SOFTWARE_PATH/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq SOFTWARE_PATH/examples/1BYR-A.fasta -ss SOFTWARE_PATH/examples/1BYR-A.ss  -rr SOFTWARE_PATH/examples/1BYR-A.dist.rr  -o SOFTWARE_PATH/test_out/1BYR-A/
 fi
@@ -27,14 +27,14 @@ printf "\nFinished.."
 printf "\nCheck log file <SOFTWARE_PATH/test_out/1BYR-A.log>\n\n"
 
 
-if [[ ! -f "SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_1.pdb" ]];then 
+if [[ ! -f "SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_model1.pdb" ]];then 
 	printf "!!!!! Failed to run DFOLD, check the installation <SOFTWARE_PATH/src/>\n\n"
 else
 	printf "\nJob successfully completed!"
-	printf "\nResults: SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_1.pdb\n\n"
+	printf "\nResults: SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_model1.pdb\n\n"
 fi
 
 printf "Validating the results\n\n";
-printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1BYR-A.pdb\n\n"
-SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1BYR-A.pdb
+printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1BYR-A.pdb\n\n"
+SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1BYR-A/stage2/1BYR-A_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1BYR-A.pdb
 
