@@ -1,33 +1,33 @@
-# The GFOLD protein structure system using gradient descent and residue-residue distance. 
-<h3> slides related to GFOLD method can be found in https://drive.google.com/drive/u/0/folders/1yoxuNOQsscytWkgJ36wtVUuWzKe94j5n</h3>
-<h3> The latest slide for GFOLD is 'GFOLD_20190520.pptx'</h3>
+# The DFOLD protein structure system using simulated annealing and residue-residue distance. 
+<h3> slides related to DFOLD method can be found in https://drive.google.com/drive/u/0/folders/1yoxuNOQsscytWkgJ36wtVUuWzKe94j5n</h3>
 
-**(1) Download GFOLD package (short path is recommended)**
+
+**(1) Download DFOLD package (short path is recommended)**
 
 ```
-git clone https://github.com/jianlin-cheng/GFOLD.git
+git clone https://github.com/jianlin-cheng/DFOLD.git
 
-(If fail, try username) git clone https://huge200890@github.com/jianlin-cheng/GFOLD.git
+(If fail, try username) git clone https://huge200890@github.com/jianlin-cheng/DFOLD.git
 
-cd GFOLD
+cd DFOLD
 ```
 
 **(2) Setup the tools and download the database (required)**
 
 ```
 a. edit setup_database.pl
-    (i) Manually create folder for database (i.e., /data/commons/GFOLD_db_tools/)
-    (ii) Set the path of variable '$GFOLD_db_tools_dir' for GFOLD databases and tools (i.e., /data/commons/GFOLD_db_tools/).
+    (i) Manually create folder for database (i.e., /data/commons/DFOLD_db_tools/)
+    (ii) Set the path of variable '$DFOLD_db_tools_dir' for DFOLD databases and tools (i.e., /data/commons/DFOLD_db_tools/).
 
 b. perl setup_database.pl
 ```
 
-**(3) Configure GFOLD system (required)**
+**(3) Configure DFOLD system (required)**
 
 ```
 a. edit configure.pl
 
-b. set the path of variable '$GFOLD_db_tools_dir' for GFOLD databases and tools (i.e., /data/commons/GFOLD_db_tools/).
+b. set the path of variable '$DFOLD_db_tools_dir' for DFOLD databases and tools (i.e., /data/commons/DFOLD_db_tools/).
 
 c. save configure.pl
 
@@ -41,25 +41,25 @@ perl configure.pl
 
 cd examples
 
-sh T0_run_GFOLD-1ALY-A.sh
+sh T0_run_DFOLD-1ALY-A.sh
 
-sh T0_run_GFOLD-1AYO-B.sh
+sh T0_run_DFOLD-1AYO-B.sh
 
-sh T0_run_GFOLD-1BYR-A.sh
+sh T0_run_DFOLD-1BYR-A.sh
 
-sh T0_run_GFOLD-1CCW-C.sh
+sh T0_run_DFOLD-1CCW-C.sh
 
-sh T0_run_GFOLD-1G5T-A.sh
+sh T0_run_DFOLD-1G5T-A.sh
 
 
 
 Output examples:
 Job successfully completed!
-Results: /data/jh7x3/GFOLD/test_out/1ALY-A/1ALY-A/1ALY-A_GFOLD.pdb
+Results: /data/jh7x3/DFOLD/test_out/1ALY-A/stage2/1ALY-A_1.pdb
 
 Validating the results
 
-/data/jh7x3/GFOLD/tools/TMscore  /data/jh7x3/GFOLD/test_out/1ALY-A/1ALY-A/1ALY-A_GFOLD.pdb  /data/jh7x3/GFOLD/installation/benchmark/native_structure/1ALY-A.pdb
+/data/jh7x3/GFOLD/tools/TMscore  /data/jh7x3/DFOLD/test_out/1ALY-A/stage2/1ALY-A_1.pdb  /data/jh7x3/GFOLD/installation/benchmark/native_structure/1ALY-A.pdb
 
 
  *****************************************************************************
@@ -102,9 +102,9 @@ GDQNPQIAAHVISEASSKTTSVLQWAEKGYYTMSNNLVTLENGKQLTVKRQGLYYIYAQVTFCSNREASSQAPFIASLCL
 
 ```
    Usage:
-   $ sh bin/run_GFOLD.sh <target id> <file name>.fasta <path of predicted secondary structure> <path of restraints> <output folder>
+   $ sh bin/run_DFOLD.sh <target id> <file name>.fasta <path of predicted secondary structure> <path of distance> <output folder>
 
    Example:
-   $ sh bin/run_GFOLD.sh 1ALY-A  /data/jh7x3/GFOLD/examples/1ALY-A.fasta  /data/jh7x3/GFOLD/examples/1ALY-A.ss  /data/jh7x3/GFOLD/examples/1ALY-A.restraints  /data/jh7x3/GFOLD/test_out/1ALY-A_out
+   $ sh bin/run_DFOLD.sh 1ALY-A  /data/jh7x3/DFOLD/examples/1ALY-A.fasta  /data/jh7x3/DFOLD/examples/1ALY-A.ss  /data/jh7x3/DFOLD/examples/1ALY-A.dist.rr  /data/jh7x3/DFOLD/test_out/1ALY-A_out
    
   
