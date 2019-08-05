@@ -1,0 +1,22 @@
+
+#### program
+bin/run_DFOLD.sh
+
+
+tools/cns_solve_1.3/cns_solve_env.sh
+
+
+src/DFOLD.pl
+
+#### examples
+installation/DFOLD_test_codes/T0_run_DFOLD-1G5T-A.sh
+installation/DFOLD_test_codes/T0_run_DFOLD-1CCW-C.sh
+installation/DFOLD_test_codes/T0_run_DFOLD-1AYO-B.sh
+installation/DFOLD_test_codes/T0_run_DFOLD-1ALY-A.sh
+installation/DFOLD_test_codes/T0_run_DFOLD-1BYR-A.sh
+
+
+#### scripts
+scripts/P1_run_pdb2dist_batch.pl
+#scripts/P1_run_DFOLD_batch.pl
+#scripts/P1_evaluate_DFOLD_batch.pl

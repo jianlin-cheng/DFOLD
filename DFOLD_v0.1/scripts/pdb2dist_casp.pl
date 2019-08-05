@@ -64,10 +64,7 @@ foreach my $r1 (sort keys %xyzPDB1){
 		my $x2 = $row2[0]; my $y2 = $row2[1]; my $z2 = $row2[2];
 		my $d = sqrt(($x1-$x2)**2+($y1-$y2)**2+($z1-$z2)**2);
 		my $prob = sprintf("%.3f",1/$d);
-		if($d < $dist)
-		{
-			$rr{"$r1 $r2 0 ".(sprintf "%.3f", $d)." $prob"} = 1;
-		}
+		$rr{"$r1 $r2 0 ".(sprintf "%.3f", $d)." $prob"} = 1;
 	}
 }
 
