@@ -106,5 +106,22 @@ GDQNPQIAAHVISEASSKTTSVLQWAEKGYYTMSNNLVTLENGKQLTVKRQGLYYIYAQVTFCSNREASSQAPFIASLCL
 
    Example:
    $ sh bin/run_DFOLD.sh 1ALY-A  /data/jh7x3/DFOLD/examples/1ALY-A.fasta  /data/jh7x3/DFOLD/examples/1ALY-A.ss  /data/jh7x3/DFOLD/examples/1ALY-A.dist.rr  /data/jh7x3/DFOLD/test_out/1ALY-A_out
-   
-  
+```
+
+
+
+**(6) Test on cullpdb proteins using real distance**
+
+```
+*** run DFOLD on real 
+
+perl scripts/P1_run_DFOLD_batch.pl /data/jh7x3/DFOLD/installation/benchmark/original_seq/  /data/jh7x3/DFOLD/installation/benchmark/seq_secondary_structure_by_SCRATCH/ /data/jh7x3/DFOLD/installation/benchmark/native_structure /data/jh7x3/DFOLD/installation/benchmark/true_distance_cb/  /data/jh7x3/DFOLD/test_out/DFOLD_trueRes_folding
+
+cd /data/jh7x3/DFOLD/test_out/DFOLD_trueRes_folding
+cp */stage2/*_model1.pdb summary/
+
+
+perl /data/jh7x3/DFOLD/scripts/P1_evaluate_DFOLD_batch.pl /data/jh7x3/GFOLD/test_out/DFOLD_trueRes_folding/summary /data/jh7x3/DFOLD/installation/benchmark/native_structure/ 
+
+```
+
