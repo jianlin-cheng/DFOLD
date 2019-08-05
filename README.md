@@ -55,12 +55,11 @@ sh T0_run_DFOLD-1G5T-A.sh
 
 Output examples:
 Job successfully completed!
-Results: /data/jh7x3/DFOLD/test_out/1ALY-A/stage2/1ALY-A_1.pdb
+Results: /data/jh7x3/DFOLD/test_out/1ALY-A/stage2/1ALY-A_model1.pd
 
 Validating the results
 
-/data/jh7x3/GFOLD/tools/TMscore  /data/jh7x3/DFOLD/test_out/1ALY-A/stage2/1ALY-A_1.pdb  /data/jh7x3/GFOLD/installation/benchmark/native_structure/1ALY-A.pdb
-
+/data/jh7x3/DFOLD/tools/TMscore  /data/jh7x3/DFOLD/test_out/1ALY-A/stage2/1ALY-A_model1.pdb  /data/jh7x3/DFOLD/installation/benchmark/native_structure/1ALY-A.pdb
 
  *****************************************************************************
  *                                 TM-SCORE                                  *
@@ -75,20 +74,20 @@ Validating the results
 Structure1: /data/jh7x  Length=  146
 Structure2: /data/jh7x  Length=  146 (by which all scores are normalized)
 Number of residues in common=  146
-RMSD of  the common residues=    0.376
+RMSD of  the common residues=    0.337
 
-TM-score    = 0.9932  (d0= 4.50, TM10= 0.9932)
-MaxSub-score= 0.9889  (d0= 3.50)
+TM-score    = 0.9945  (d0= 4.50, TM10= 0.9945)
+MaxSub-score= 0.9911  (d0= 3.50)
 GDT-TS-score= 0.9983 %(d<1)=0.9932 %(d<2)=1.0000 %(d<4)=1.0000 %(d<8)=1.0000
-GDT-HA-score= 0.9709 %(d<0.5)=0.8904 %(d<1)=0.9932 %(d<2)=1.0000 %(d<4)=1.0000
+GDT-HA-score= 0.9795 %(d<0.5)=0.9247 %(d<1)=0.9932 %(d<2)=1.0000 %(d<4)=1.0000
 
  -------- rotation matrix to rotate Chain-1 to Chain-2 ------
  i          t(i)         u(i,1)         u(i,2)         u(i,3)
- 1   -174.7174922470   0.8855807046   0.1952525250  -0.4214537545
- 2    -56.1568386650   0.1980585103  -0.9794687412  -0.0376006846
- 3    156.7184010012  -0.4201424071  -0.0501740620  -0.9060700422
+ 1    -12.4677703609  -0.0762551404   0.2831125431   0.9560504388
+ 2     -2.3407693147   0.0043722315  -0.9587381018   0.2842571649
+ 3      1.7943000641   0.9970787517   0.0258561439   0.0718708750
 
-Superposition in the TM-score: Length(d<5.0)=146  RMSD=  0.38
+Superposition in the TM-score: Length(d<5.0)=146  RMSD=  0.34
 (":" denotes the residue pairs of distance < 5.0 Angstrom)
 GDQNPQIAAHVISEASSKTTSVLQWAEKGYYTMSNNLVTLENGKQLTVKRQGLYYIYAQVTFCSNREASSQAPFIASLCLKSPGRFERILLRAANTHSSAKPCGQQSIHLGGVFELQPGASVFVNVTDPSQVSHGTGFTSFGLLKL
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
