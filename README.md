@@ -98,7 +98,7 @@ GDQNPQIAAHVISEASSKTTSVLQWAEKGYYTMSNNLVTLENGKQLTVKRQGLYYIYAQVTFCSNREASSQAPFIASLCL
 
 
 
-**(5) Run GFOLD for structure folding**
+**(5) Run DFOLD for structure folding**
 
 ```
    Usage:
