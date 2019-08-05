@@ -35,6 +35,6 @@ else
 fi
 
 printf "Validating the results\n\n";
-printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1ALY-A/stage2/1ALY-A_model1.pd  SOFTWARE_PATH/installation/benchmark/native_structure/1ALY-A.pdb\n\n"
-SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1ALY-A/stage2/1ALY-A_model1.pd  SOFTWARE_PATH/installation/benchmark/native_structure/1ALY-A.pdb
+printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1ALY-A/stage2/1ALY-A_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1ALY-A.pdb\n\n"
+SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1ALY-A/stage2/1ALY-A_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1ALY-A.pdb
 
