@@ -187,6 +187,16 @@ if(-d "$DFOLD_db_tools_dir/tools/SCRATCH-1D_1.1")
 }
 
 
+
+$option_list = "$install_dir/installation/configure_list";
+
+if (! -f $option_list)
+{
+        die "\nOption file $option_list not exists.\n";
+}
+configure_file($option_list,'tools');
+
+
 sub prompt_yn {
   my ($query) = @_;
   my $answer = prompt("$query (Y/N): ");
