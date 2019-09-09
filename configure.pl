@@ -112,6 +112,7 @@ configure_file2($option_list,'bin');
 configure_file2($option_list,'installation');
 configure_file2($option_list,'scripts');
 configure_file2($option_list,'src');
+configure_file2($option_list,'tools');
 print "#########  Configuring option files, done\n\n\n";
 
 
