@@ -10,8 +10,8 @@ use Getopt::Long;
 use Scalar::Util qw(looks_like_number);
 
 # Location of CNSsuite and DSSP
-my $program_dssp   = "/data/jh7x3/DFOLD/tools/dssp-2.0.4-linux-amd64";
-my $cns_suite      = "/data/jh7x3/DFOLD/tools/cns_solve_1.3";
+my $program_dssp   = "/storage/htc/bdm/tianqi/DFOLD/tools/dssp-2.0.4-linux-amd64";
+my $cns_suite      = "/storage/htc/bdm/tianqi/DFOLD/tools/cns_solve_1.3";
 my $cns_executable = "$cns_suite/intel-x86_64bit-linux/bin/cns_solve";
 
 # User inputs 
@@ -1991,7 +1991,7 @@ sub rr_remove_unsatisfied_top_model{
 	confess "ERROR! file_new_rr not defined!" if not defined $file_new_rr;
 	confess "ERROR! log file not defined!" if not defined $file_log;
 	my %contacts = min_all_atom_dist_in_top_model($file_rr, $file_pdb, "log_min_all_atom_dist_in_top_model.txt");
-	my %confidence = rr2contacts_hash($file_rr, 1, 10000, "confidence");
+	my %confidence = rr2contacts_hash($file_rr, 1, 100000, "confidence");
 	my %rr_thres = rr2contacts_hash($file_rr, 1);
 	system_cmd("rm -f $file_new_rr");
 	system_cmd("rm -f $file_log");
@@ -2342,7 +2342,7 @@ sub chk_errors_rr{
 		confess "column 2 not defined in $line in rr input" if not defined $C[1];
 		confess "column 3 not defined in $line in rr input" if not defined $C[2];
 		confess "column 4 not defined in $line in rr input" if not defined $C[3];
-		confess "column 5 not defined in $line in rr input" if not defined $C[4];
+		#confess "column 5 not defined in $line in rr input" if not defined $C[4];
 		$no_rows = 0;
 	}
 	close RR;

@@ -1,5 +1,11 @@
 #!/usr/bin/perl -w
-# version 1.0, Badri Adhikari, 08/05/2015
+# MUL CLASS prediction
+# version 3.0, Tianqi Wu, 02/10/2020
+# 1. Given input(distance,hhbonds and torsion angle by psipred) to fold
+# 2. No hhbonds tbl, using ss to generate hhbond, and torsion angle constraints
+# To solve "grep: write error: Broken pipe" in DFOLD_v2.py, 
+# made modifications in sub assess_dgsa
+# 3. Comment line 168 for avoid CNS long path problem
 
 use strict;
 use warnings;
@@ -8,15 +14,16 @@ use Cwd 'abs_path';
 use File::Basename;
 use Getopt::Long;
 use Scalar::Util qw(looks_like_number);
+use Data::Dumper;
 
 # Location of CNSsuite and DSSP
-my $program_dssp   = "/data/jh7x3/tools/dssp-2.0.4-linux-amd64";
-my $cns_suite      = "/data/jh7x3/tools/cns_solve_1.3";
+my $program_dssp   = "/storage/htc/bdm/tianqi/DFOLD/tools/dssp-2.0.4-linux-amd64";
+my $cns_suite      = "/storage/htc/bdm/tianqi/DFOLD/tools/cns_solve_1.3";
 my $cns_executable = "$cns_suite/intel-x86_64bit-linux/bin/cns_solve";
 
 # User inputs 
 my ($help, $dir_out, $file_fasta, $file_pair, $file_rr, $file_ss);
-my ($selectrr, $rrtype, $lambda, $stage2, $contwt, $sswt, $mcount, $rep2, $pthres);
+my ($selectrr, $rrtype, $lambda, $stage2, $contwt, $sswt, $mcount, $rep2, $pthres, $hhbond, $ssnoe, $dihedral);
 
 GetOptions(
 	"h"			=> \$help,
@@ -33,7 +40,10 @@ GetOptions(
 	"sswt=s" 	=> \$sswt,
 	"mcount=i"	=> \$mcount,
 	"rep2=s"	=> \$rep2,
-	"pthres=s"	=> \$pthres)
+	"pthres=s"	=> \$pthres,
+	"hhbond=s"	=> \$hhbond,
+	"ssnoe=s"	=> \$ssnoe,
+	"dihedral=s"	=> \$dihedral)
 or confess "ERROR! Error in command line arguments!";
 
 print_usage() if defined $help;
@@ -49,6 +59,9 @@ $sswt     = 5     if !$sswt;
 $mcount   = 20    if !$mcount;
 $rep2     = 0.85  if !$rep2;
 $pthres   = 7.0   if !$pthres;
+$hhbond   = ""	  if !$hhbond;
+$ssnoe    = ""    if !$ssnoe;
+$dihedral = ""    if !$dihedral;
 
 # Other parameters
 my $rep1         = 1.0;    # initial van der Waals repel radius (md.cool.init.rad)
@@ -96,21 +109,25 @@ foreach (keys %residues){
 }
 
 my %stage_list = qw/stage1 1/;
-%stage_list    = qw/stage1 1 stage2 2/ if $stage2 != 0;
+%stage_list    = qw/stage1 1 stage2 2 stage3 3/ if $stage2 != 0;
 foreach my $stage (sort keys %stage_list){
 	my $dir_stage = "$dir_out/$stage";
-	mkdir $dir_stage or confess $! if $stage eq "stage2"; 
+	mkdir $dir_stage or confess $! if (not -d $stage) and ($stage ne "stage1"); 
 	chdir $dir_stage or confess $!;
 	print "\nStart $stage job..";
-	if ($stage eq "stage2"){
-		confess "ERROR! Stage 1 top model not found! Something went wrong!" if not -f "$dir_out/stage1/${id}_model1.pdb";
-		system_cmd("cp $dir_out/stage1/extended.* ./");
-		system_cmd("cp $dir_out/stage1/$id.fasta  ./");
-		system_cmd("cp $dir_out/stage1/$id.ss     ./");
+	my $indx = $stage;
+	$indx =~ s/stage//g ;
+	$indx = int($indx);
+	if ($indx >= 2){
+		my $pre_indx = $indx - 1;
+		confess "ERROR! Stage $indx top model not found! Something went wrong!" if not -f "$dir_out/stage$pre_indx/${id}_model1.pdb";
+		system_cmd("cp $dir_out/stage$pre_indx/extended.* ./");
+		system_cmd("cp $dir_out/stage$pre_indx/$id.fasta  ./");
+		system_cmd("cp $dir_out/stage$pre_indx/$id.ss     ./");
 	}
 	#contact_restraints($stage);
-	distance_restraints($stage);
-	sec_restraints($stage);
+	distance_restraints($stage,$indx);
+	sec_restraints($stage,$indx);
 	build_models($stage);
 	assess_dgsa($stage);
 }
@@ -146,14 +163,13 @@ sub process_parameters{
 	confess "ERROR! Stage2 selection must be 1,2,or 3!" if ($stage2 > 3 or $stage2 < 0);
 	confess "ERROR! Contact restraints weight must be between 0.1 and 10000!" if ($contwt > 1000.0 or $contwt < 0.1);
 	confess "ERROR! Secondary structure restraints weight must be between 0.1 and 100!" if ($contwt > 100.0 or $contwt < 0.1);
-	confess "ERROR! Model-count must be between 5 and 50!" if ($mcount > 50 or $mcount < 5);
+	confess "ERROR! Model-count must be between 5 and 50!" if ($mcount > 200 or $mcount < 5);
 	confess "ERROR! Rep2 must be between 0.6 and 1.5!" if ($rep2 > 1.5 or $rep2 < 0.5);
 	confess "ERROR! Pair detection threshold must be between 5.0 and 10.0!" if ($pthres > 10.0 or $pthres < 5.0);
-	$dir_out = abs_path($dir_out);
+	#$dir_out = abs_path($dir_out);
 	mkdir $dir_out or confess $! if not -d $dir_out;
 	system_cmd("rm -r $dir_out/input") if -d "$dir_out/input";
-	system_cmd("rm -r $dir_out/stage1") if -d "$dir_out/stage1";
-	system_cmd("rm -r $dir_out/stage2") if (-d "$dir_out/stage2" and $stage2 > 0);
+	system_cmd("rm -r $dir_out/stage*") if -d "$dir_out/stage1";
 	mkdir "$dir_out/input" or confess $!;
 	mkdir "$dir_out/stage1" or confess $!;
 	system_cmd("cp $file_fasta $dir_out/input/$id.fasta");
@@ -310,6 +326,8 @@ sub contact_restraints{
 }
 sub distance_restraints{
 	my $stage = shift;
+    my $indx = shift;
+    my $pre_indx = $indx - 1;
 	if($stage eq "stage1"){
 		return if not $file_rr;
 		my $xL = $selectrr + 1; # +1 to account for header line
@@ -320,9 +338,9 @@ sub distance_restraints{
 		dist2tbl($file_rr, "contact.tbl", $rrtype);
 		return;
 	}
-	my $stg1_rr = "$dir_out/stage1/$id.rr";
+	my $stg1_rr = "$dir_out/stage$pre_indx/$id.rr";
 	return if not -f $stg1_rr;
-	my $stg1_model = "$dir_out/stage1/${id}_model1.pdb";
+	my $stg1_model = "$dir_out/stage$pre_indx/${id}_model1.pdb";
 	if($stage2 == 1 or $stage2 == 2){
 		rr_remove_unsatisfied_top_model($stg1_rr, $stg1_model, "$id.rr", "rr_filter.log");
 	}
@@ -391,6 +409,8 @@ sub build_models{
 
 sub sec_restraints{
 	my $stage = shift;
+    my $indx = shift;
+    my $pre_indx = $indx - 1;
 	return if not $file_ss;
 	system_cmd("rm -f ssrestraints.log");
 	# helix restraints; start writing to the files hbond.tbl, ssnoe.tbl and dihedral.tbl
@@ -416,15 +436,35 @@ sub sec_restraints{
 			confess "ERROR! Pairing hbond file is empty!" if not -s $pair_hbonds;
 			update_sec_using_pairing_info($file_ss, $file_pair, $file_ss);
 			# continue to write to hbond.tbl, ssnoe.tbl and dihedral.tbl
-			strand_and_sheet_tbl($file_ss, $file_pair, $pair_hbonds);
+			if ((-f $hhbond) && (-f $ssnoe)) {
+				system("cp $hhbond ./hbond.tbl");
+				system("cp $ssnoe ./ssnoe.tbl");
+				diheral_tbl($file_ss, $file_pair, $pair_hbonds);
+			}
+			else{
+				strand_and_sheet_tbl($file_ss, $file_pair, $pair_hbonds);
+			}
 		}
 		else{
 			# continue to write to hbond.tbl, ssnoe.tbl and dihedral.tbl
-			strand_and_sheet_tbl($file_ss, undef, undef);
+			if ((-f $hhbond) && (-f $ssnoe)) {
+				system("cp $hhbond ./hbond.tbl");
+				system("cp $ssnoe ./ssnoe.tbl");
+				diheral_tbl($file_ss, undef, undef);
+			}
+			else{
+				strand_and_sheet_tbl($file_ss, undef, undef);
+			}
 		}
+		#system("cp $hhbond ./hbond.tbl");
+		#system("cp $ssnoe ./ssnoe.tbl");
+		#system("cp $dihedral ./dihedral.tbl");
+		print "hbond.tbl doesn't exist for stage1" if not -f "hbond.tbl";
+		print "ssnoe.tbl doesn't exist for stage1" if not -f "ssnoe.tbl";
+		print "dihedral.tbl doesn't exist for stage1" if not -f "dihedral.tbl";
 	}
 	else{
-		my $stg1_model = "$dir_out/stage1/${id}_model1.pdb";
+		my $stg1_model = "$dir_out/stage$pre_indx/${id}_model1.pdb";
 		if ($stage2 == 1 or $stage2 == 3){
 			detect_hbonds_from_model($stg1_model, "pairing.txt", "pairing_hbonds.txt");
 			if (-f "pairing_hbonds.txt"){
@@ -437,7 +477,7 @@ sub sec_restraints{
 				update_sec_using_pairing_info($file_ss, $file_pair, $file_ss);
 			}
 			else{
-				print "\n\nWARNING! Could not detect any sheet pairings from the top model in stage1!\n";
+				print "\n\nWARNING! Could not detect any sheet pairings from the top model in stage$indx!\n";
 			}
 		}
 		# continue to write to hbond.tbl, ssnoe.tbl and dihedral.tbl
@@ -574,6 +614,105 @@ sub pairing2hbonds{
 	}
 	foreach (sort keys %hbonds){
 		print2file($file_hbonds, $_." ".$hbonds{$_});
+	}
+}
+
+sub diheral_tbl{
+	my $file_ss = shift;
+	my $file_pair = shift;
+	my $file_pairing_hbond = shift;
+	my %res_ss = fasta2residues_hash($file_ss);
+	my %unpaired_residues = %res_ss;
+	my %paired_residues = ();
+	my %res_ssE = %res_ss;
+	foreach (sort keys %res_ssE){
+		delete $res_ssE{$_} if $res_ssE{$_} ne "E";
+	}
+	my %hbonds = ();
+	if ($file_pair){
+		%paired_residues = paired_residues($file_pair);
+		foreach (sort keys %unpaired_residues){
+			delete $unpaired_residues{$_} if $unpaired_residues{$_} ne "E";
+		}
+		foreach (sort keys %unpaired_residues){
+			delete $unpaired_residues{$_} if defined $paired_residues{$_};
+		}
+		%hbonds = load_hbonds($file_pairing_hbond);
+		confess ":(" if not scalar %paired_residues;
+		confess ":(" if not scalar %hbonds;
+		foreach (sort keys %hbonds){
+			my @H = split /\s+/, $_;
+			my @HR = split /\s+/, $res_hbnd{$hbonds{$_}};
+			confess ":( distance not defined ".$hbonds{$_} if not (defined $HR[0] and defined $HR[1] and defined $HR[2]);
+			# In case of Proline, use N atom instead of H
+			$HR[0] -= 1.0;
+			if(not defined $defined_atoms{$H[0]." ".$H[1]}){
+				confess "ERROR! N must be defined when H is not for ".$H[0] if not defined $defined_atoms{$H[0]." N"};
+				$HR[0] += 1.0;
+				$H[1]  = "N";
+			}
+			if(not defined $defined_atoms{$H[2]." ".$H[3]}){
+				confess "ERROR! N must be defined when H is not for ".$H[2] if not defined $defined_atoms{$H[2]." N"};
+				$HR[0] += 1.0;
+				$H[3]  = "N";
+			}
+			#print2file("hbond.tbl", (sprintf "assign (resid %3d and name %1s) (resid %3d and name %1s) %4s %4s %4s !sheet", $H[0], $H[1], $H[2], $H[3], $HR[0], $HR[1], $HR[2]));
+		}
+		foreach my $hb (sort keys %hbonds){
+			my @H = split /\s+/, $hb;
+			my @hbondConnectors = ( $H[0]." ".$H[1]." ".$H[2], $H[2]." ".$H[3]." ".$H[0]); 
+			foreach (@hbondConnectors){
+				my @HBC = split /\s+/, $_;
+				foreach my $A (sort keys %ATOMTYPE){
+					foreach my $S (sort keys %SHIFT){
+						# A   O-O   O -1 
+						my $distances = $res_dist{$hbonds{$hb}." ".$A."-".$A." ".$HBC[1]." ".$S};
+						my @DIST = split /\s+/, $distances;
+						confess ":( distance not defined ".$hbonds{$hb}." ".$A."-".$A." ".$HBC[1]." ".$S if not defined $DIST[2];
+						next if not defined $paired_residues{($HBC[2]+$S)};
+						#print2file("ssnoe.tbl", (sprintf "assign (resid %3d and name %2s) (resid %3d and name %2s) %2.2f %2.2f %2.2f !sheet", $HBC[0], $A, ($HBC[2]+$S), $A, $DIST[0], $DIST[1], $DIST[2]));
+					}
+				}
+			}
+		}
+	}
+	# Identify the strands that are not used for pairing and generate generic dihedral restraints for them
+	foreach my $i (sort {$a <=> $b} keys %res_ssE){
+		my @SPHI = ();
+		my @SPSI = ();
+		my $strand_type = "unpaired E residue";
+		if (defined $paired_residues{$i}){
+			@SPHI = split /\s+/, $res_dihe{$paired_residues{$i}." PHI"};
+			@SPSI = split /\s+/, $res_dihe{$paired_residues{$i}." PSI"};
+			$strand_type = "paired E residue";
+		}
+		else{
+			@SPHI = split /\s+/, $res_dihe{"U PHI"};
+			@SPSI = split /\s+/, $res_dihe{"U PSI"};
+		}
+		if (defined $res_ss{$i-1} and $res_ss{$i-1} eq "E"){
+			print2file("dihedral.tbl", (sprintf "assign (resid %3d and name c) (resid %3d and name  n) (resid %3d and name ca) (resid %3d and name c) 5.0 %7s %7s 2 !$strand_type phi", $i-1, $i, $i, $i, $SPHI[0], $SPHI[1]));
+		}
+		if (defined $res_ss{$i+1} and $res_ss{$i+1} eq "E"){
+			print2file("dihedral.tbl", (sprintf "assign (resid %3d and name n) (resid %3d and name ca) (resid %3d and name  c) (resid %3d and name n) 5.0 %7s %7s 2 !$strand_type psi", $i, $i, $i, $i+1, $SPSI[0], $SPSI[1]));
+		}
+	}
+	# Identify the strands that are not used for pairing and generate generic restraints for them
+	foreach my $i (sort {$a <=> $b} keys %res_ssE){
+		my @SD = ();
+		my $strand_type = "unpaired E residue";
+		if (defined $paired_residues{$i}){
+			@SD = split /\s+/, $res_strnd_OO{$paired_residues{$i}};
+			confess ":(" if (!$SD[0] or !$SD[1] or !$SD[2]);
+			$strand_type = "paired E residue";
+		}
+		else{
+			@SD = split /\s+/, $res_strnd_OO{"U"};
+			confess ":(" if (!$SD[0] or !$SD[1] or !$SD[2]);
+		}
+		next if not defined $res_ssE{$i+1};
+		next if $res_ssE{$i+1} ne "E";
+		#print2file("ssnoe.tbl", (sprintf "assign (resid %3d and name %2s) (resid %3d and name %2s) %.2f %.2f %.2f !$strand_type", $i, "O", $i+1, "O", $SD[0], $SD[1], $SD[2]));
 	}
 }
 
@@ -1419,8 +1558,10 @@ sub ssnoe_tbl_min_pdb_dist{
 			foreach my $ri (keys %right_list){
 				my @L = split /\s+/, $le;
 				my @R = split /\s+/, $ri;
-				confess "$file_pdb does not have ".$L[0]." ".uc($L[1])."\n" if not defined $xyzPDB{$L[0]." ".uc($L[1])};
-				confess "$file_pdb does not have ".$R[0]." ".uc($R[1])."\n" if not defined $xyzPDB{$R[0]." ".uc($R[1])};
+				#confess "$file_pdb does not have ".$L[0]." ".uc($L[1])."\n" if not defined $xyzPDB{$L[0]." ".uc($L[1])};
+				#confess "$file_pdb does not have ".$R[0]." ".uc($R[1])."\n" if not defined $xyzPDB{$R[0]." ".uc($R[1])};
+                next if not defined $xyzPDB{$L[0]." ".uc($L[1])};
+                next if not defined $xyzPDB{$R[0]." ".uc($R[1])};
 				my $d = calc_dist($xyzPDB{$L[0]." ".uc($L[1])}, $xyzPDB{$R[0]." ".uc($R[1])});
 				$distance_pdb = $d if $d < $distance_pdb;
 			}
@@ -1880,8 +2021,8 @@ sub rr2contacts_hash{
 		confess "ERROR! Expecting a pair in row [".$_."]!\n" if (not defined $C[0] || not defined $C[1]);
 		next if (abs($C[1] - $C[0]) < $seq_sep);
 		if(defined $C[3]){
-			$contacts{$C[0]." ".$C[1]} = $C[3];
-			$contacts{$C[0]." ".$C[1]} = $C[4] if $hashvalue eq "confidence";
+			$contacts{$C[0]." ".$C[1]} = $C[3]." ".$C[4]." ".$C[5];    #modified by Tianqi 11/17/2019
+			$contacts{$C[0]." ".$C[1]} = $C[6] if $hashvalue eq "confidence";
 		}
 		else{
 			confess "ERROR! Confidence column not defined in row [".$_."] in file $file_rr!\n";
@@ -1947,13 +2088,15 @@ sub dist2tbl{
 	confess ":(" if not ($rrtype eq "ca" or $rrtype eq "cb");
 	my %r1a1r2a2 = rr2r1a1r2a2($file_rr, $rrtype);
 	system_cmd("rm -f $file_tbl");
-	foreach (sort {$r1a1r2a2{$a} <=> $r1a1r2a2{$b}} keys %r1a1r2a2){# sort by distance from small to large
+	foreach (keys %r1a1r2a2){# sort by distance from small to large
 		my @C = split /\s+/, $_;
 		#my $distance = sprintf("%.2f", 3.6);
-		my $distance = $r1a1r2a2{$_};
-		my $negdev   = sprintf("%.2f", 0.1);
+		my @distance_dev = split /\s+/,$r1a1r2a2{$_};
+		my $distance = sprintf("%.2f",  $distance_dev[0]);
+		my $negdev   = sprintf("%.2f",  $distance_dev[1]);
+		#my $negdev   = sprintf("%.2f", 0.1);
 		#my $posdev   = sprintf("%.2f", ($r1a1r2a2{$_} - 3.6));
-		my $posdev   = sprintf("%.2f", 0.1);
+		my $posdev   = sprintf("%.2f",  $distance_dev[2]);
 		print2file($file_tbl, (sprintf "assign (resid %3d and name %2s) (resid %3d and name %2s) %.2f %.2f %.2f", $C[0], $C[1], $C[2], $C[3], $distance, $negdev, $posdev));
 	}
 }
@@ -1991,15 +2134,16 @@ sub rr_remove_unsatisfied_top_model{
 	confess "ERROR! file_new_rr not defined!" if not defined $file_new_rr;
 	confess "ERROR! log file not defined!" if not defined $file_log;
 	my %contacts = min_all_atom_dist_in_top_model($file_rr, $file_pdb, "log_min_all_atom_dist_in_top_model.txt");
-	my %confidence = rr2contacts_hash($file_rr, 1, 10000, "confidence");
-	my %rr_thres = rr2contacts_hash($file_rr, 1);
+	my %confidence = rr2contacts_hash($file_rr, 1, 100000, "confidence");
+	my %rr_thres = rr2contacts_hash($file_rr, 1,100000);
 	system_cmd("rm -f $file_new_rr");
 	system_cmd("rm -f $file_log");
 	print2file($file_new_rr, seq_rr($file_rr));
 	my $count = 0;
 	foreach (keys %contacts){
-		print2file($file_new_rr, $_." 0 ".$rr_thres{$_}." ".$confidence{$_}) if $contacts{$_} <= $rr_thres{$_};
-		if ($contacts{$_} > $rr_thres{$_}){
+        my @info = split(/\s+/,$rr_thres{$_});
+		print2file($file_new_rr, $_." 0 ".$rr_thres{$_}." ".$confidence{$_}) if $contacts{$_} <= $info[0];
+		if ($contacts{$_} > $info[0]){
 			print2file($file_log, "$_ ".$contacts{$_}." ignored");
 			$count ++;
 		}
@@ -2233,12 +2377,15 @@ sub assess_dgsa{
 			system_cmd("touch assess.failed");
 			confess "ERROR! Something went wrong! Log file not found (dgsa.log)!";
 		}
-		my $result = `grep NOEPRI dgsa.log | grep $search_string | head -n 1`;
+		#my $result = `grep NOEPRI dgsa.log | grep $search_string | head -n 1`;
+        my $result = `grep NOEPRI dgsa.log > dgsa.tmp1`;  ##modified
+        $result = `grep $search_string dgsa.tmp1 > dgsa.tmp2`;  ##modified
+		$result = `head -n 1 dgsa.tmp2`;  ##modified
 		my @C = split /\s+/, $result;
 		my $count = $C[($#C)-1];
 		if ($count != count_lines($tbl)){
 			system_cmd("touch assess.failed");
-			confess ":( CNS did not accept all restraints of $tbl! Something wrong somewhere! Only $count accepted";
+			print ":( CNS did not accept all restraints of $tbl! Something wrong somewhere! Only $count accepted";
 		}
 	}
 	# remove "trial" structure of corresponding "accepted" structure because they are same
@@ -2306,6 +2453,8 @@ sub assess_dgsa{
 			print "".noe_tbl_violation_coverage($pdb, $tbl)." [ violation of ".basename($tbl)." in ".basename($pdb)." ]\n";
 		}
 	}
+    
+    print Dumper(\%energy_noe);
 	print "\n";
 	my $i = 1;
 	foreach( sort {$energy_noe{$a} <=> $energy_noe{$b}} keys %energy_noe){
@@ -2342,7 +2491,7 @@ sub chk_errors_rr{
 		confess "column 2 not defined in $line in rr input" if not defined $C[1];
 		confess "column 3 not defined in $line in rr input" if not defined $C[2];
 		confess "column 4 not defined in $line in rr input" if not defined $C[3];
-		confess "column 5 not defined in $line in rr input" if not defined $C[4];
+		#confess "column 5 not defined in $line in rr input" if not defined $C[4];
 		$no_rows = 0;
 	}
 	close RR;
