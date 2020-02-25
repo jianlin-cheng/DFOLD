@@ -31,9 +31,9 @@ mkdir -p $outputfolder
 cd $outputfolder
 
 
-printf "perl /data/jh7x3/DFOLD/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq $fasta -ss $secondary_structure  -rr $distances  -o $outputfolder\n\n"
+printf "perl /home/tianqi/test/DFOLD2/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq $fasta -ss $secondary_structure  -rr $distances  -o $outputfolder\n\n"
 
-perl /data/jh7x3/DFOLD/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq $fasta -ss $secondary_structure  -rr $distances  -o $outputfolder
+perl /home/tianqi/test/DFOLD2/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq $fasta -ss $secondary_structure  -rr $distances  -o $outputfolder
 
 
 

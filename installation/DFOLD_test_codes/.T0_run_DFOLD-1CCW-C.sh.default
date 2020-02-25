@@ -1,0 +1,40 @@
+#!/bin/bash
+#SBATCH -J  DFOLD
+#SBATCH -o DFOLD-%j.out
+#SBATCH --partition Lewis,hpc5,hpc4
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=10
+#SBATCH --mem-per-cpu=2G
+#SBATCH --time 1-00:00
+
+
+mkdir -p SOFTWARE_PATH/test_out/1CCW-C/
+cd SOFTWARE_PATH/test_out/1CCW-C/
+
+
+
+
+if [[ ! -f "SOFTWARE_PATH/test_out/1CCW-C/stage2/1CCW-C_model1.pdb" ]];then 
+	printf "perl SOFTWARE_PATH/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq SOFTWARE_PATH/examples/1CCW-C.fasta -ss SOFTWARE_PATH/examples/1CCW-C.ss  -rr SOFTWARE_PATH/examples/1CCW-C.dist.rr  -o SOFTWARE_PATH/test_out/1CCW-C/\n\n"
+	perl SOFTWARE_PATH/src/DFOLD.pl -rrtype cb -stage2 1 -mcount 5 -seq SOFTWARE_PATH/examples/1CCW-C.fasta -ss SOFTWARE_PATH/examples/1CCW-C.ss  -rr SOFTWARE_PATH/examples/1CCW-C.dist.rr  -o SOFTWARE_PATH/test_out/1CCW-C/
+fi
+
+
+
+
+printf "\nFinished.."
+printf "\nCheck log file <SOFTWARE_PATH/test_out/1CCW-C.log>\n\n"
+
+
+if [[ ! -f "SOFTWARE_PATH/test_out/1CCW-C/stage2/1CCW-C_model1.pdb" ]];then 
+	printf "!!!!! Failed to run DFOLD, check the installation <SOFTWARE_PATH/src/>\n\n"
+else
+	printf "\nJob successfully completed!"
+	printf "\nResults: SOFTWARE_PATH/test_out/1CCW-C/stage2/1CCW-C_model1.pdb\n\n"
+fi
+
+printf "Validating the results\n\n";
+printf "SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1CCW-C/stage2/1CCW-C_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1CCW-C.pdb\n\n"
+SOFTWARE_PATH/tools/TMscore  SOFTWARE_PATH/test_out/1CCW-C/stage2/1CCW-C_model1.pdb  SOFTWARE_PATH/installation/benchmark/native_structure/1CCW-C.pdb
+

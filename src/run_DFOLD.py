@@ -7,6 +7,7 @@ import argparse
 import subprocess
 from string import Template
 import glob,re
+import shutil
 
 # thresholds for splitting distances
 #fl_thre = "a"
@@ -39,10 +40,11 @@ tool_dict=dict(
 # $dist   - predicted distance
 # $hhbond       - hbond.tbl
 # $ssnoe      - ssnoe.tbl
-# $ss   - psipred
+# $psipred   - psipred
+# $mout   - # of final models
 # $thre - thresholds for splitting distances, a:[11,12,13,14,15], b:[11,13,15,17,19], c:[15,16,17,18,19]
 # $outdir   - output folder
-DFOLD_template=Template("python "+src_dict["DFOLD"]+" -f $fasta -d $dist -b $hhbond -n $ssnoe -ss $ss -th $thre -out $outdir")
+DFOLD_template=Template("python "+src_dict["DFOLD"]+" -f $fasta -mout $mout -d $dist -b $hhbond -n $ssnoe -ss \"\" -p $psipred -th $thre -out $outdir")
 
 #### SBROD templates ####
 SBROD_template=Template(tool_dict["SBROD"]+" $outdir/*.pdb > $outdir/SBROD_prediction.$target")
@@ -110,27 +112,42 @@ def get_dm(seq,l,domain):
             sys.exit()
     return dm_dict
 
-def dfold(fasta,dist,hhbond,ssnoe,ss,thre,outdir):
+def dfold(fasta,dist,hhbond,ssnoe,ss,thre,outdir,mout):
     dfold_cmd = DFOLD_template.substitute(
         fasta   =fasta,
-        ss   =ss,
+        psipred   =ss,
         hhbond = hhbond,
         ssnoe = ssnoe,
         dist   =dist,
         thre   =thre,
+        mout = mout,
         outdir   =outdir,
     )
     #print(dfold_cmd)
     stdout,stderr=subprocess.Popen(dfold_cmd,
             shell=True,stdout=subprocess.PIPE).communicate()
 
-def parameter_setting(outdir,target):
-    fasta = os.path.join(outdir,target+".fasta")
-    dist = os.path.join(outdir,target+".dist.rr")
-    hhbonds = os.path.join(outdir,target+".hbond.tbl")
-    ssnoe = os.path.join(outdir,target+".ssnoe.tbl")
-    ss = os.path.join(outdir,target+".ss")
-    return fasta,dist,hhbonds,ssnoe,ss
+def parameter_setting(typ,indir,outdir,target): 
+    fasta_in = os.path.join(indir,target+".fasta")
+    dist_in = os.path.join(indir,typ,target+".dist.rr")
+    hhbonds_in = os.path.join(indir,target+".hbond.tbl")
+    ssnoe_in = os.path.join(indir,target+".ssnoe.tbl")
+    ss_in = os.path.join(indir,target+".ss2")
+
+
+    fasta_out = os.path.join(outdir,target+".fasta")
+    dist_out = os.path.join(outdir,target+".dist.rr")
+    hhbonds_out = os.path.join(outdir,target+".hbond.tbl")
+    ssnoe_out = os.path.join(outdir,target+".ssnoe.tbl")
+    ss_out = os.path.join(outdir,target+".ss2")
+
+    shutil.copy(fasta_in, fasta_out)
+    shutil.copy(dist_in, dist_out)
+    shutil.copy(hhbonds_in, hhbonds_out)
+    shutil.copy(ssnoe_in, ssnoe_out)
+    shutil.copy(ss_in, ss_out)
+
+    return fasta_out,dist_out,hhbonds_out,ssnoe_out,ss_out
 
 def domain_assembly(num,target,fasta,modeller,dm_dict,outdir):
     if len(dm_dict) == 0:
@@ -228,15 +245,23 @@ if __name__=="__main__":
     parser.add_argument("-f", "--fasta", help="input fasta file",type=is_file,required=True)
     parser.add_argument("-dm", "--domain", help="e.g. domain 0:1-124 easy",type=is_file,required=True)
     parser.add_argument("-in", "--input",help="input folder contains distance and hhbonds constraints and model construction will be stored under this_folder",type=is_dir,required=True)
+    parser.add_argument("-out", "--output",help="output folder for folding",type=str)
+    parser.add_argument("-t", "--type",default="real_dist",help="Types of distance predictor: mul_class, real_dist",type=str)
+    parser.add_argument("-mout", "--outmodels", default=5,help="number of output models",type=int)
     parser.add_argument("-ft", "--flthre", default="a",help="list of thresholds(A), a:[11,12,13,14,15], b:[11,13,15,17,19], c:[15,16,17,18,19]",type=str)
     parser.add_argument("-dt", "--dmthre", default="a",help="list of thresholds(A), a:[11,12,13,14,15], b:[11,13,15,17,19], c:[15,16,17,18,19]",type=str)
 
     args = parser.parse_args()
     fasta = args.fasta
     domain = args.domain
-    outdir = args.input
+    indir = args.input
+    outdir = args.output
+    typ = args.type
     fl_thre = args.flthre
     dm_thre = args.dmthre
+    mout = args.outmodels
+
+    mkdir_if_not_exist(outdir)
 
     #### Input fasta file's id
     fasta = os.path.abspath(fasta)
@@ -250,8 +275,9 @@ if __name__=="__main__":
     procs = []
     print("Start FL folding ....")
     fl_dir = os.path.join(outdir,"fl")
-    fasta, dist,hhbonds,ssnoe,ss = parameter_setting(fl_dir,target)
-    proc = Process(target=dfold, args=(fasta,dist,hhbonds,ssnoe,ss,fl_thre,fl_dir,))
+    mkdir_if_not_exist(fl_dir)
+    fasta, dist,hhbonds,ssnoe,ss = parameter_setting(typ,indir,fl_dir,target)
+    proc = Process(target=dfold, args=(fasta,dist,hhbonds,ssnoe,ss,fl_thre,fl_dir,mout,))
     procs.append(proc)
     proc.start()
 
@@ -263,19 +289,19 @@ if __name__=="__main__":
         print("Skip domain folding....")
     else:
         for key in dm_dict:
-            dm_fasta = dm_dir+"/"+key+".fasta"
-            if not os.path.exists(dm_dir+"/"+key+".fasta"):
+            dm_fasta = in_dir+"/"+key+".fasta"
+            if not os.path.exists(in_dir+"/"+key+".fasta"):
                 print("Domain fasta "+dm_fasta+" dosesn't match with "+domain)
                 continue
             else:   
-                dm_fasta = os.path.abspath(dm_dir+"/"+key+".fasta")
+                dm_fasta = os.path.abspath(in_dir+"/"+key+".fasta")
                 dm_seq,dm_l = get_length(dm_fasta)
                 if dm_seq != dm_dict[key]:
                     print("Domain fasta "+dm_fasta+" dosesn't match with "+domain)
                 else:
                     print("Start folding for "+key+"....")
-                    dm_fasta, dm_dist,dm_hhbonds,dm_ssnoe,dm_ss = parameter_setting(dm_dir,key)
-                    proc = Process(target=dfold, args=(dm_fasta,dm_dist,dm_hhbonds,dm_ssnoe,dm_ss,dm_thre,dm_dir+"/"+key,))
+                    dm_fasta, dm_dist,dm_hhbonds,dm_ssnoe,dm_ss = parameter_setting(typ,indir,dm_dir,key)
+                    proc = Process(target=dfold, args=(dm_fasta,dm_dist,dm_hhbonds,dm_ssnoe,dm_ss,dm_thre,dm_dir+"/"+key,mout,))
                     procs.append(proc)
                     proc.start()
 

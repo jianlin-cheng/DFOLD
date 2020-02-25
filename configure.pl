@@ -7,7 +7,7 @@
 #																					#
 # Set directory of DFOLD databases and tools								        #
 
-$DFOLD_db_tools_dir = "/data/commons/DFOLD_db_tools/";							        
+$DFOLD_db_tools_dir = "/home/tianqi/test/DFOLD2_db_tools/";							        
 
 ######################## !!! End of customize settings !!! ##########################
 
@@ -116,27 +116,27 @@ configure_file($option_list,'tools');
 print "#########  Configuring option files, done\n\n\n";
 
 
-### compress benchmark dataset
+# ### compress benchmark dataset
 
-$benchmark_dir = "$install_dir/installation";
-chdir($benchmark_dir);
+# $benchmark_dir = "$install_dir/installation";
+# chdir($benchmark_dir);
 
-print "Updating benchmark dataset in $benchmark_dir\n\n";
-if(-e "benchmark.tar.gz")
-{
-	`rm benchmark.tar.gz`;
-}
-`wget http://sysbio.rnet.missouri.edu/bdm_download/test/benchmark.tar.gz`;
-`tar -zxf benchmark.tar.gz`;
-`rm benchmark.tar.gz`;
-if(! -d "benchmark")
-{
-	die "Failed to download benchmark.tar.gz from http://sysbio.rnet.missouri.edu/bdm_download/test/benchmark.tar.gz, please contact chengji\@missouri.edu\n";
-}
+# print "Updating benchmark dataset in $benchmark_dir\n\n";
+# if(-e "benchmark.tar.gz")
+# {
+# 	`rm benchmark.tar.gz`;
+# }
+# `wget http://sysbio.rnet.missouri.edu/bdm_download/test/benchmark.tar.gz`;
+# `tar -zxf benchmark.tar.gz`;
+# `rm benchmark.tar.gz`;
+# if(! -d "benchmark")
+# {
+# 	die "Failed to download benchmark.tar.gz from http://sysbio.rnet.missouri.edu/bdm_download/test/benchmark.tar.gz, please contact chengji\@missouri.edu\n";
+# }
 
 
-system("mv $install_dir/installation/DFOLD_test_codes/T0_run_DFOLD*.sh $install_dir/examples");
-system("chmod +x $install_dir/examples/*.sh");
+# system("mv $install_dir/installation/DFOLD_test_codes/T0_run_DFOLD*.sh $install_dir/examples");
+# system("chmod +x $install_dir/examples/*.sh");
 
 
 =pod

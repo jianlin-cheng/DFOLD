@@ -18,7 +18,7 @@ DFOLD_src=os.path.dirname(os.path.abspath(__file__))
 DFOLD_tools = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))+"/DFOLD_db_tools/tools"
 src_dict=dict(
     #### DFOLD scripts ####
-    DFOLD       =os.path.join(DFOLD_src,"DFOLD_iter_dev_v3.pl"),
+    DFOLD       =os.path.join(DFOLD_src,"DFOLD.pl"),
 )
 
 tool_dict=dict(
@@ -33,11 +33,12 @@ tool_dict=dict(
 # $fasta   - input fasta file
 # $ss   - psipred
 # $dist   - predicted distance
+# $num   - # of final models
 # $outdir   - output folder
-DFOLD_mul_hb_template=Template("perl "+src_dict["DFOLD"]+" -hhbond $hhbond -ssnoe $ssnoe -rrtype cb -stage2 1 -mcount 50 -seq $fasta -ss $ss -rr $dist -o $outdir")
+DFOLD_mul_hb_template=Template("perl "+src_dict["DFOLD"]+" -hhbond $hhbond -ssnoe $ssnoe -rrtype cb -num $num -stage2 1 -mcount 50 -seq $fasta -ss $ss -rr $dist -o $outdir")
 
 #### DFOLD templates with hhbonds for mul-class prediction and select top 5L distances as input####
-DFOLD_mulhb_sort_template=Template("perl "+src_dict["DFOLD"]+" -selectrr $selectrr -hhbond $hhbond -ssnoe $ssnoe -rrtype cb -stage2 1 -mcount 50 -seq $fasta -ss $ss -rr $dist -o $outdir")
+DFOLD_mulhb_sort_template=Template("perl "+src_dict["DFOLD"]+" -selectrr $selectrr -hhbond $hhbond -ssnoe $ssnoe -rrtype cb -num $num -stage2 1 -mcount 50 -seq $fasta -ss $ss -rr $dist -o $outdir")
 
 #### SBROD templates ####
 SBROD_template=Template(tool_dict["SBROD"]+" $outdir/*.pdb > $outdir/SBROD_prediction.$target")
@@ -83,16 +84,17 @@ def dfold_test(hhbonds,ssnoe,fasta,ss,dist,outdir):
     print(hhbonds,ssnoe,fasta,ss,dist,outdir)
     print("child pid %s,parent pid %s"%(os.getpid(),os.getppid()))
 
-def dfold(target,hhbonds,ssnoe,fasta,ss,dist,outdir):
+def dfold(target,hhbonds,ssnoe,fasta,ss,dist,outdir,num):
     dfold_cmd = DFOLD_mul_hb_template.substitute(
     fasta   =fasta,
     ss   =ss,
+    num =num,
     hhbond = hhbond,
     ssnoe = ssnoe,
     dist   =dist,
     outdir   =outdir,
     )
-    #print(dfold_cmd)
+    print(dfold_cmd)
     if not os.path.exists(outdir+"/stage3/"+target+"_model1.pdb"):
         stdout,stderr=subprocess.Popen(dfold_cmd,
         shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
@@ -103,6 +105,7 @@ def dfold(target,hhbonds,ssnoe,fasta,ss,dist,outdir):
             fasta   =fasta,
             selectrr ="5L",
             ss   =ss,
+            num =num,
             hhbond = hhbond,
             ssnoe = ssnoe,
             dist   =dist,
@@ -206,6 +209,7 @@ if __name__=="__main__":
     parser.add_argument("-ss", "--ss",default="", help="predicted secondary structure",type=str)
     parser.add_argument("-p", "--psipred",default="", help="psipred",type=str)
     parser.add_argument("-th", "--thresholds", default="a",help="list of thresholds(A), a:[11,12,13,14,15], b:[11,13,15,17,19], c:[15,16,17,18,19]",type=set_threshold)
+    parser.add_argument("-mout", "--outmodels", default=5,help="number of output models",type=int)
     parser.add_argument("-out", "--outdir", help="output folder",type=str,required=True)
 
     args = parser.parse_args()
@@ -217,6 +221,7 @@ if __name__=="__main__":
     psipred = args.psipred
     outdir = args.outdir
     thre = args.thresholds
+    mout = args.outmodels
 
     mkdir_if_not_exist(outdir)
 
@@ -245,7 +250,7 @@ if __name__=="__main__":
     for num in thre:
         mkdir_if_not_exist(outdir+"/"+"dfold/2.5_"+str(num))
         print("Start folding for threshold "+str(num)+"A....")
-        proc = Process(target=dfold, args=(target,hhbond,ssnoe,fasta,ss,outdir+"/data/2.5_"+str(num)+"/"+target+".dist.rr",outdir+"/dfold/2.5_"+str(num),))
+        proc = Process(target=dfold, args=(target,hhbond,ssnoe,fasta,ss,outdir+"/data/2.5_"+str(num)+"/"+target+".dist.rr",outdir+"/dfold/2.5_"+str(num),mout,))
         procs.append(proc)
         proc.start()
 
