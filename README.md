@@ -1,7 +1,3 @@
-# The DFOLD protein structure system using simulated annealing and residue-residue distance. 
-<h3> slides related to DFOLD method can be found in https://drive.google.com/drive/u/0/folders/1yoxuNOQsscytWkgJ36wtVUuWzKe94j5n</h3>
-
-
 **(1) Download DFOLD package (short path is recommended)**
 
 ```
